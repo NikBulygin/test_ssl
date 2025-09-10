@@ -1,8 +1,19 @@
+version: '3.8'
+
 services:
-  cert-checker:
-    build: .
-    container_name: cert-checker
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
     volumes:
+      - uptime-kuma-data:/app/data
       - ./certs:/usr/local/share/ca-certificates:ro
-    stdin_open: true
-    tty: true
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    environment:
+      - UPTIME_KUMA_PORT=3001
+    command: >
+      sh -c "
+        update-ca-certificates &&
+        node server/server.js
+      "
