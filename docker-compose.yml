@@ -8,4 +8,4 @@ services:
       - ./certs:/usr/local/share/ca-certificates:ro
     stdin_open: true
     tty: true
-    command: /bin/bash
+    command: tail -f /dev/null
