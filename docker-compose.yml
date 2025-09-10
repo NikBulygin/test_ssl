@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  cert-checker:
+    build: .
+    container_name: cert-checker
+    volumes:
+      - ./certs:/usr/local/share/ca-certificates:ro
+    stdin_open: true
+    tty: true
+    command: /bin/bash
