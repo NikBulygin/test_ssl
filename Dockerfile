@@ -18,7 +18,8 @@ RUN update-ca-certificates
 
 # Copy check script
 COPY check_cert.sh /app/check_cert.sh
-RUN chmod +x /app/check_cert.sh
+RUN chmod +x /app/check_cert.sh && \
+    sed -i 's/\r$//' /app/check_cert.sh
 
 # Set entry point
 ENTRYPOINT ["/bin/bash"]
