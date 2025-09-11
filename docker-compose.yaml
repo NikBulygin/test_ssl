@@ -41,8 +41,6 @@ services:
       - ./files:/srv/filestore
       - /etc/ssl/certs:/etc/ssl/certs:ro
       - /etc/pki/ca-trust:/etc/pki/ca-trust:ro
-      - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
-      - /etc/ca-certificates:/etc/ca-certificates:ro
     environment:
       - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
       - DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT=false
@@ -71,8 +69,6 @@ services:
       - ./files:/srv/filestore
       - /etc/ssl/certs:/etc/ssl/certs:ro
       - /etc/pki/ca-trust:/etc/pki/ca-trust:ro
-      - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
-      - /etc/ca-certificates:/etc/ca-certificates:ro
     environment:
       - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
       - DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT=false
