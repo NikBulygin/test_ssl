@@ -31,7 +31,6 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start Manager ===' &&
-        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Manager.App/UKTMK.Salesportal.Manager.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
@@ -58,7 +57,6 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start supplier ===' &&
-        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Supplier.App/UKTMK.Salesportal.Supplier.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
