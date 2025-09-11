@@ -1,10 +1,3 @@
-CONNECTED(00000003)
----
-Certificate chain
- 0 s:O = \D0\90\D0\9E \"\D0\A3\D0\9A\D0\A2\D0\9C\D0\9A\", CN = directum
-   i:DC = kz, DC = uktmp, CN = uktmp-SERVERCA-CA
-   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
-   v:NotBefore: Oct 14 03:33:08 2021 GMT; NotAfter: Oct 14 03:43:08 2029 GMT
 -----BEGIN CERTIFICATE-----
 MIIGDjCCBPagAwIBAgITEQAABBcFezGCmnWrCgABAAAEFzANBgkqhkiG9w0BAQsF
 ADBHMRIwEAYKCZImiZPyLGQBGRYCa3oxFTATBgoJkiaJk/IsZAEZFgV1a3RtcDEa
@@ -40,36 +33,3 @@ V2Br9nntNVPzu6SVrUA6FRRZY2Ly2pGIbyFVUelKSQsO4zVyx/qWKuJGPwYoCg9Q
 R2Dq4Kc0RitIoVKLeJB+/75i0tgDsSUFkR45nemTql2kagzqPx9zRIvRXLH6S9RU
 h0o1e/a2E9VM/bvTlMFcP1s+
 -----END CERTIFICATE-----
----
-Server certificate
-subject=O = \D0\90\D0\9E \"\D0\A3\D0\9A\D0\A2\D0\9C\D0\9A\", CN = directum
-issuer=DC = kz, DC = uktmp, CN = uktmp-SERVERCA-CA
----
-No client certificate CA names sent
-Peer signing digest: SHA256
-Peer signature type: RSA
-Server Temp Key: ECDH, secp384r1, 384 bits
----
-SSL handshake has read 2074 bytes and written 477 bytes
-Verification error: unable to verify the first certificate
----
-New, TLSv1.2, Cipher is ECDHE-RSA-AES256-GCM-SHA384
-Server public key is 2048 bit
-Secure Renegotiation IS supported
-Compression: NONE
-Expansion: NONE
-No ALPN negotiated
-SSL-Session:
-    Protocol  : TLSv1.2
-    Cipher    : ECDHE-RSA-AES256-GCM-SHA384
-    Session-ID: B7310000FF9E8ADE6F39D3DC97CDE967CCF8D322961CEE3A47E9984168AE4425
-    Session-ID-ctx: 
-    Master-Key: C25CCA4312FFFFF774A9D1FC5CB3028C9EE6AC2239B3E0C2AA489D1C721EF180FA4216D7ADA62EC7463CD7CD087D6C30
-    PSK identity: None
-    PSK identity hint: None
-    SRP username: None
-    Start Time: 1757584750
-    Timeout   : 7200 (sec)
-    Verify return code: 21 (unable to verify the first certificate)
-    Extended master secret: yes
----
