@@ -27,6 +27,7 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start Manager ===' &&
+        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Manager.App/UKTMK.Salesportal.Manager.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
@@ -39,6 +40,9 @@ services:
       - ./front/build_manager:/src/UKTMK.Salesportal.Manager.App/wwwroot
       - ./files:/srv/filestore
       - ./certs:/usr/local/share/ca-certificates
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    environment:
+      - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
     networks:
       - proxy_network
 
@@ -50,6 +54,7 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start supplier ===' &&
+        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Supplier.App/UKTMK.Salesportal.Supplier.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
@@ -62,6 +67,9 @@ services:
       - ./front/build_supplier:/src/UKTMK.Salesportal.Supplier.App/wwwroot
       - ./files:/srv/filestore
       - ./certs:/usr/local/share/ca-certificates
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    environment:
+      - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
     networks:
       - proxy_network
 
