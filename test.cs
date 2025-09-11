@@ -54,13 +54,7 @@ namespace UKTMK.Salesportal.Core.Services
 
                 var url = _configuration.GetSection("Directum:Url").Value;
 
-                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.Transport);
-
-
-                if (!url.StartsWith("https"))
-                {
-                    securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
-                }
+                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
 
                 securityMode.MaxReceivedMessageSize = 2147483647;
 
