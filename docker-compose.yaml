@@ -27,7 +27,6 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start Manager ===' &&
-        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Manager.App/UKTMK.Salesportal.Manager.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
@@ -39,11 +38,7 @@ services:
       - ./back:/src
       - ./front/build_manager:/src/UKTMK.Salesportal.Manager.App/wwwroot
       - ./files:/srv/filestore
-      - /etc/ssl/certs:/etc/ssl/certs:ro
-      - /etc/pki/ca-trust:/etc/pki/ca-trust:ro
-    environment:
-      - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
-      - DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT=false
+      - ./certs:/usr/local/share/ca-certificates
     networks:
       - proxy_network
 
@@ -55,7 +50,6 @@ services:
     command: >
       /bin/sh -c "
         echo '=== Start supplier ===' &&
-        update-ca-certificates &&
         dotnet run -p /src/UKTMK.Salesportal.Supplier.App/UKTMK.Salesportal.Supplier.App.csproj --no-build --urls=http://0.0.0.0:80
       "
     ports:
@@ -67,11 +61,7 @@ services:
       - ./back:/src
       - ./front/build_supplier:/src/UKTMK.Salesportal.Supplier.App/wwwroot
       - ./files:/srv/filestore
-      - /etc/ssl/certs:/etc/ssl/certs:ro
-      - /etc/pki/ca-trust:/etc/pki/ca-trust:ro
-    environment:
-      - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
-      - DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2SUPPORT=false
+      - ./certs:/usr/local/share/ca-certificates
     networks:
       - proxy_network
 
