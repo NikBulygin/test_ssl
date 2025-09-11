@@ -1,3 +1,16 @@
+/*
+ API http://manager.purchase.uktmp.kz/api/Role/List called, with arguments:{}
+2025-09-11 05:55:19.283 +00:00 [WRN] Directum error, IntegrationServices DirectumManager + NTLM authentication is not possible with default credentials on this platform.
+System.PlatformNotSupportedException: NTLM authentication is not possible with default credentials on this platform.
+   at System.Runtime.AsyncResult.End[TAsyncResult](IAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannel.SendAsyncResult.End(SendAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannel.EndCall(String action, Object[] outs, IAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannelProxy.TaskCreator.<>c__DisplayClass1_0.<CreateGenericTask>b__0(IAsyncResult asyncResult)
+--- End of stack trace from previous location ---
+   at UKTMK.Salesportal.Core.Services.DirectumManager.CallApi[T](Func`2 callbackFunc) in /src/UKTMK.Salesportal.Core/Services/DirectumManager.cs:line 83
+2025-09-11 05:55:19.284 +00:00 [INF] API http://manager.purchase.uktmp.kz/api/Account/EmployeeID?login=bulygin_n called, with arguments:{"login":"bulygin_n"}
+
+*/
 using Directum.Integration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -54,15 +67,18 @@ namespace UKTMK.Salesportal.Core.Services
 
                 var url = _configuration.GetSection("Directum:Url").Value;
 
-                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
+                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.Transport);
+
+
+                if (!url.StartsWith("https"))
+                {
+                    securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
+                }
 
                 securityMode.MaxReceivedMessageSize = 2147483647;
-                securityMode.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
 
                 Task<T> task;
                 var client = new IntegrationServicesClient() { Endpoint = { Address = new EndpointAddress(url), Binding = securityMode} };
-                client.ClientCredentials.Windows.AllowedImpersonationLevel = System.Security.Principal.TokenImpersonationLevel.None;
-                client.ClientCredentials.Windows.ClientCredential = System.Net.NetworkCredential.Empty;
 
                 using (OperationContextScope scope = new OperationContextScope(client.InnerChannel))
                 {
@@ -411,4 +427,3 @@ namespace UKTMK.Salesportal.Core.Services
         }
     }
 }
-
