@@ -15,6 +15,10 @@ services:
       dockerfile: dockerfile.back
     volumes:
       - ./back:/src
+      - ./certs:/usr/local/share/ca-certificates
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    environment:
+      - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
     depends_on:
       front_build:
         condition: service_healthy
