@@ -67,8 +67,7 @@ namespace UKTMK.Salesportal.Core.Services
 
                 var url = _configuration.GetSection("Directum:Url").Value;
 
-                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.Transport);
-
+                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.TransportCredentialOnly);
 
                 if (!url.StartsWith("https"))
                 {
@@ -76,22 +75,17 @@ namespace UKTMK.Salesportal.Core.Services
                 }
 
                 securityMode.MaxReceivedMessageSize = 2147483647;
+                securityMode.Security.Transport.ClientCredentialType = HttpClientCredentialType.Ntlm;
 
                 Task<T> task;
-                var client = new IntegrationServicesClient() { Endpoint = { Address = new EndpointAddress(url), Binding = securityMode} };
+                var client = new IntegrationServicesClient(securityMode, new EndpointAddress(url));
+                
+                // Устанавливаем учетные данные для NTLM
+                client.ClientCredentials.Windows.ClientCredential = new System.Net.NetworkCredential(
+                    _configuration.GetSection("Directum:Login").Value,
+                    _configuration.GetSection("Directum:Password").Value);
 
-                using (OperationContextScope scope = new OperationContextScope(client.InnerChannel))
-                {
-                    OperationContext.Current.OutgoingMessageProperties[HttpRequestMessageProperty.Name] =
-                        new HttpRequestMessageProperty()
-                        {
-                            Headers =
-                            {
-                                {"Authorization", $"Basic {credential}"},
-                            }
-                        };
-                    task = callbackFunc(client);
-                }
+                task = callbackFunc(client);
 
                 return await task;
             }
