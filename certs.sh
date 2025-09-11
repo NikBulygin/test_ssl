@@ -10,19 +10,48 @@ mkdir -p ./certs
 echo "Извлекаем сертификат Directum из certs.txt..."
 sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' certs.txt > ./certs/directum.crt
 
+# Конвертируем все существующие сертификаты в .crt
+echo "Конвертируем все сертификаты в формат .crt..."
+
+# Конвертируем .cer файлы
+for cer_file in *.cer; do
+    if [ -f "$cer_file" ]; then
+        crt_name=$(basename "$cer_file" .cer).crt
+        cp "$cer_file" "./certs/$crt_name"
+        echo "✓ Конвертирован $cer_file -> $crt_name"
+    fi
+done
+
+# Конвертируем .pem файлы
+for pem_file in *.pem; do
+    if [ -f "$pem_file" ]; then
+        crt_name=$(basename "$pem_file" .pem).crt
+        cp "$pem_file" "./certs/$crt_name"
+        echo "✓ Конвертирован $pem_file -> $crt_name"
+    fi
+done
+
 # Проверяем что сертификат создан
 if [ -s ./certs/directum.crt ]; then
     echo "✓ Сертификат Directum извлечен"
     
-    # Ищем корневой CA сертификат
-    if [ -f "uktmp-root-ca.cer" ]; then
-        cp uktmp-root-ca.cer ./certs/uktmp-root-ca.crt
-        echo "✓ Корневой CA скопирован из uktmp-root-ca.cer"
-        ROOT_CERT="./certs/uktmp-root-ca.crt"
-    else
-        echo "⚠ uktmp-root-ca.cer не найден"
+    # Ищем корневой CA сертификат среди всех .crt файлов
+    ROOT_CERT=""
+    for crt_file in ./certs/*.crt; do
+        if [ -f "$crt_file" ] && [ "$(basename "$crt_file")" != "directum.crt" ]; then
+            # Проверяем является ли это корневым CA
+            SUBJECT=$(openssl x509 -in "$crt_file" -noout -subject 2>/dev/null | sed 's/subject=//')
+            if echo "$SUBJECT" | grep -q "uktmp.*CA\|SERVERCA\|Root.*CA"; then
+                ROOT_CERT="$crt_file"
+                echo "✓ Найден корневой CA: $(basename "$crt_file")"
+                break
+            fi
+        fi
+    done
+    
+    if [ -z "$ROOT_CERT" ]; then
+        echo "⚠ Корневой CA не найден среди .crt файлов"
         echo "Проблема: Directum выдан uktmp-SERVERCA-CA, но этого CA нет в доверенных"
-        echo "Нужно получить корневой CA сертификат uktmp-SERVERCA-CA от администратора"
         echo "Используем копию Directum как временное решение (НЕ РЕКОМЕНДУЕТСЯ)"
         cp ./certs/directum.crt ./certs/root-ca.crt
         ROOT_CERT="./certs/root-ca.crt"
@@ -35,18 +64,21 @@ if [ -s ./certs/directum.crt ]; then
     echo "Directum Issuer:  $(openssl x509 -in ./certs/directum.crt -noout -issuer 2>/dev/null | sed 's/issuer=//')"
     echo "Root CA Subject:  $(openssl x509 -in $ROOT_CERT -noout -subject 2>/dev/null | sed 's/subject=//')"
     
-    # Создаем символические ссылки
-    cd ./certs
-    DIRECTUM_HASH=$(openssl x509 -in directum.crt -noout -hash 2>/dev/null)
-    ROOT_HASH=$(openssl x509 -in $(basename $ROOT_CERT) -noout -hash 2>/dev/null)
-    
-    ln -sf directum.crt ${DIRECTUM_HASH}.0
-    ln -sf $(basename $ROOT_CERT) ${ROOT_HASH}.0
-    
+    # Создаем символические ссылки для всех сертификатов
     echo ""
-    echo "✓ Созданы символические ссылки:"
-    echo "  ${DIRECTUM_HASH}.0 -> directum.crt"
-    echo "  ${ROOT_HASH}.0 -> $(basename $ROOT_CERT)"
+    echo "=== Регистрация всех сертификатов ==="
+    cd ./certs
+    
+    # Регистрируем все .crt файлы
+    for crt_file in *.crt; do
+        if [ -f "$crt_file" ]; then
+            HASH=$(openssl x509 -in "$crt_file" -noout -hash 2>/dev/null)
+            if [ ! -z "$HASH" ]; then
+                ln -sf "$crt_file" ${HASH}.0
+                echo "✓ Зарегистрирован: ${HASH}.0 -> $crt_file"
+            fi
+        fi
+    done
     
     cd ..
     
