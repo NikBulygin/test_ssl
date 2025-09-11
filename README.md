@@ -110,3 +110,8 @@ To restore:
 ```bash
 docker run --rm -v uptime-kuma-data:/data -v $(pwd):/backup ubuntu tar xzf /backup/uptime-kuma-backup.tar.gz -C /data
 ```
+
+
+
+
+curl -sS -o /dev/null -w "%{http_code} %{ssl_verify_result}\n" https://ya.ru
