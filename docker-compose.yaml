@@ -16,6 +16,7 @@ services:
     volumes:
       - ./back:/src
       - ./certs:/usr/local/share/ca-certificates
+      - ./certs:/etc/ssl/certs
       - /etc/ssl/certs:/etc/ssl/certs:ro
     environment:
       - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
@@ -43,6 +44,7 @@ services:
       - ./front/build_manager:/src/UKTMK.Salesportal.Manager.App/wwwroot
       - ./files:/srv/filestore
       - ./certs:/usr/local/share/ca-certificates
+      - ./certs:/etc/ssl/certs
       - /etc/ssl/certs:/etc/ssl/certs:ro
     environment:
       - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
@@ -69,6 +71,7 @@ services:
       - ./front/build_supplier:/src/UKTMK.Salesportal.Supplier.App/wwwroot
       - ./files:/srv/filestore
       - ./certs:/usr/local/share/ca-certificates
+      - ./certs:/etc/ssl/certs
       - /etc/ssl/certs:/etc/ssl/certs:ro
     environment:
       - DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0

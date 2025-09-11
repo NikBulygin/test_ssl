@@ -12,12 +12,16 @@ echo "Скачиваем сертификат с сервера Directum..."
 openssl s_client -connect directum.uktmp.kz:443 -showcerts < /dev/null 2>/dev/null | \
     sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > ./certs/directum.crt
 
-# Скачиваем корневой CA сертификат
+# Скачиваем корневой CA сертификат (последний в цепочке)
 echo "Скачиваем корневой CA сертификат..."
 openssl s_client -connect directum.uktmp.kz:443 -showcerts < /dev/null 2>/dev/null | \
-    awk '/-----BEGIN CERTIFICATE-----/{flag=1} flag; /-----END CERTIFICATE-----/{flag=0}' | \
-    tail -n +2 | \
-    awk '/-----BEGIN CERTIFICATE-----/{flag=1} flag; /-----END CERTIFICATE-----/{flag=0}' > ./certs/root-ca.crt
+    awk '/-----BEGIN CERTIFICATE-----/{cert=""; flag=1} flag{cert=cert"\n"$0} /-----END CERTIFICATE-----/{if(flag) print cert; flag=0}' | \
+    tail -n +1 > ./certs/all-certs.pem
+
+# Извлекаем корневой CA (последний сертификат)
+echo "Извлекаем корневой CA..."
+awk '/-----BEGIN CERTIFICATE-----/{cert=""; flag=1} flag{cert=cert"\n"$0} /-----END CERTIFICATE-----/{if(flag) print cert; flag=0}' ./certs/all-certs.pem | \
+    tail -n +1 > ./certs/root-ca.crt
 
 # Создаем символические ссылки для Linux
 echo "Создаем символические ссылки..."
