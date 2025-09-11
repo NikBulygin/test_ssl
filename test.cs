@@ -54,7 +54,13 @@ namespace UKTMK.Salesportal.Core.Services
 
                 var url = _configuration.GetSection("Directum:Url").Value;
 
-                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
+                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.Transport);
+
+
+                if (!url.StartsWith("https"))
+                {
+                    securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
+                }
 
                 securityMode.MaxReceivedMessageSize = 2147483647;
 
@@ -408,3 +414,13 @@ namespace UKTMK.Salesportal.Core.Services
         }
     }
 }
+
+
+// 2025-09-11 05:32:02.989 +00:00 [WRN] Directum error, IntegrationServices DirectumManager + NTLM authentication is not possible with default credentials on this platform.
+System.PlatformNotSupportedException: NTLM authentication is not possible with default credentials on this platform.
+   at System.Runtime.AsyncResult.End[TAsyncResult](IAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannel.SendAsyncResult.End(SendAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannel.EndCall(String action, Object[] outs, IAsyncResult result)
+   at System.ServiceModel.Channels.ServiceChannelProxy.TaskCreator.<>c__DisplayClass1_0.<CreateGenericTask>b__0(IAsyncResult asyncResult)
+--- End of stack trace from previous location ---
+   at UKTMK.Salesportal.Core.Services.DirectumManager.CallApi[T](Func`2 callbackFunc) in /src/UKTMK.Salesportal.Core/Services/DirectumManager.cs:line 83
