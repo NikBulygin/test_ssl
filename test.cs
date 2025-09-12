@@ -1,16 +1,38 @@
 /*
- API http://manager.purchase.uktmp.kz/api/Role/List called, with arguments:{}
-2025-09-11 05:55:19.283 +00:00 [WRN] Directum error, IntegrationServices DirectumManager + NTLM authentication is not possible with default credentials on this platform.
-System.PlatformNotSupportedException: NTLM authentication is not possible with default credentials on this platform.
-   at System.Runtime.AsyncResult.End[TAsyncResult](IAsyncResult result)
-   at System.ServiceModel.Channels.ServiceChannel.SendAsyncResult.End(SendAsyncResult result)
-   at System.ServiceModel.Channels.ServiceChannel.EndCall(String action, Object[] outs, IAsyncResult result)
-   at System.ServiceModel.Channels.ServiceChannelProxy.TaskCreator.<>c__DisplayClass1_0.<CreateGenericTask>b__0(IAsyncResult asyncResult)
---- End of stack trace from previous location ---
-   at UKTMK.Salesportal.Core.Services.DirectumManager.CallApi[T](Func`2 callbackFunc) in /src/UKTMK.Salesportal.Core/Services/DirectumManager.cs:line 83
-2025-09-11 05:55:19.284 +00:00 [INF] API http://manager.purchase.uktmp.kz/api/Account/EmployeeID?login=bulygin_n called, with arguments:{"login":"bulygin_n"}
+ * ================================================================================================
+ * НАСТРОЙКИ АКТИВНОГО КАТАЛОГА И DIRECTUM
+ * ================================================================================================
+ */
+// Настройки Active Directory
+private const string AD_DOMAIN = "tmp.kz";
+private const string AD_LDAP_PATH = "DC=tmp,DC=kz";
+private const string AD_USERNAME = "cms@tmp.kz";
+private const string AD_PASSWORD = "@TMK8888!";
 
-*/
+// Настройки Directum
+private const string DIRECTUM_URL = "https://manager.purchase.uktmp.kz/IntegrationServices";
+private const string DIRECTUM_LOGIN = "directum_user";
+private const string DIRECTUM_PASSWORD = "directum_password";
+
+// Настройки SSL
+private const bool DISABLE_SSL_VALIDATION = true;
+
+/*
+ * ================================================================================================
+ * ОРИГИНАЛЬНЫЙ ЛОГ ОШИБКИ
+ * ================================================================================================
+ * API http://manager.purchase.uktmp.kz/api/Role/List called, with arguments:{}
+ * 2025-09-11 05:55:19.283 +00:00 [WRN] Directum error, IntegrationServices DirectumManager + NTLM authentication is not possible with default credentials on this platform.
+ * System.PlatformNotSupportedException: NTLM authentication is not possible with default credentials on this platform.
+ *    at System.Runtime.AsyncResult.End[TAsyncResult](IAsyncResult result)
+ *    at System.ServiceModel.Channels.ServiceChannel.SendAsyncResult.End(SendAsyncResult result)
+ *    at System.ServiceModel.Channels.ServiceChannel.EndCall(String action, Object[] outs, IAsyncResult result)
+ *    at System.ServiceModel.Channels.ServiceChannelProxy.TaskCreator.<>c__DisplayClass1_0.<CreateGenericTask>b__0(IAsyncResult asyncResult)
+ * --- End of stack trace from previous location ---
+ *    at UKTMK.Salesportal.Core.Services.DirectumManager.CallApi[T](Func`2 callbackFunc) in /src/UKTMK.Salesportal.Core/Services/DirectumManager.cs:line 83
+ * 2025-09-11 05:55:19.284 +00:00 [INF] API http://manager.purchase.uktmp.kz/api/Account/EmployeeID?login=bulygin_n called, with arguments:{"login":"bulygin_n"}
+ * ================================================================================================
+ */
 using Directum.Integration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -57,15 +79,23 @@ namespace UKTMK.Salesportal.Core.Services
             _context = context;
             _documentGenerator = documentGenerator;
             _configuration = configuration;
+            
+            // Настройка SSL
+            if (DISABLE_SSL_VALIDATION)
+            {
+                ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                Log.Information("SSL валидация отключена для тестирования");
+            }
         }
 
         private async Task<T> CallApi<T>(Func<IntegrationServices, Task<T>> callbackFunc)
         {
             try
             {
-                var credential = Convert.ToBase64String(Encoding.ASCII.GetBytes(_configuration.GetSection("Directum:Login").Value + ":" + _configuration.GetSection("Directum:Password").Value));
-
-                var url = _configuration.GetSection("Directum:Url").Value;
+                var url = DIRECTUM_URL;
+                var username = DIRECTUM_LOGIN;
+                var password = DIRECTUM_PASSWORD;
 
                 var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.TransportCredentialOnly);
 
@@ -75,15 +105,14 @@ namespace UKTMK.Salesportal.Core.Services
                 }
 
                 securityMode.MaxReceivedMessageSize = 2147483647;
-                securityMode.Security.Transport.ClientCredentialType = HttpClientCredentialType.Ntlm;
+                securityMode.Security.Transport.ClientCredentialType = HttpClientCredentialType.Basic;
 
                 Task<T> task;
                 var client = new IntegrationServicesClient(securityMode, new EndpointAddress(url));
                 
-                // Устанавливаем учетные данные для NTLM
-                client.ClientCredentials.Windows.ClientCredential = new System.Net.NetworkCredential(
-                    _configuration.GetSection("Directum:Login").Value,
-                    _configuration.GetSection("Directum:Password").Value);
+                // Используем Basic аутентификацию вместо NTLM
+                client.ClientCredentials.UserName.UserName = username;
+                client.ClientCredentials.UserName.Password = password;
 
                 task = callbackFunc(client);
 
@@ -418,6 +447,94 @@ namespace UKTMK.Salesportal.Core.Services
             var resp = await CallApi(services => services.CreateTaskAsync(request, null));
             Log.Information("Calling Directum CreateTaskAsync result:{result}", resp);
             return resp;
+        }
+
+        public bool TestActiveDirectoryConnection()
+        {
+            try
+            {
+                Log.Information("Тестирование подключения к AD: {domain}, {ldapPath}, {username}", AD_DOMAIN, AD_LDAP_PATH, AD_USERNAME);
+
+                using (var context = new PrincipalContext(ContextType.Domain, AD_DOMAIN, AD_LDAP_PATH, AD_USERNAME, AD_PASSWORD))
+                {
+                    using (var user = UserPrincipal.FindByIdentity(context, AD_USERNAME))
+                    {
+                        if (user != null)
+                        {
+                            Log.Information("Успешное подключение к AD. Пользователь найден: {displayName}", user.DisplayName);
+                            return true;
+                        }
+                        else
+                        {
+                            Log.Warning("Пользователь не найден в AD: {username}", AD_USERNAME);
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Ошибка при подключении к AD");
+                return false;
+            }
+        }
+
+        private async Task<T> CallApiWithAD<T>(Func<IntegrationServices, Task<T>> callbackFunc)
+        {
+            try
+            {
+                var url = DIRECTUM_URL;
+                var username = DIRECTUM_LOGIN;
+                var password = DIRECTUM_PASSWORD;
+
+                // Проверяем учетные данные через AD
+                if (!ValidateADCredentials(username, password))
+                {
+                    Log.Warning("Не удалось валидировать учетные данные через AD для пользователя: {username}", username);
+                    return default;
+                }
+
+                var securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.TransportCredentialOnly);
+
+                if (!url.StartsWith("https"))
+                {
+                    securityMode = new System.ServiceModel.BasicHttpBinding(BasicHttpSecurityMode.None);
+                }
+
+                securityMode.MaxReceivedMessageSize = 2147483647;
+                securityMode.Security.Transport.ClientCredentialType = HttpClientCredentialType.Ntlm;
+
+                Task<T> task;
+                var client = new IntegrationServicesClient(securityMode, new EndpointAddress(url));
+                
+                // Используем AD учетные данные для NTLM
+                client.ClientCredentials.Windows.ClientCredential = new System.Net.NetworkCredential(username, password, AD_DOMAIN);
+
+                task = callbackFunc(client);
+
+                return await task;
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, $"Directum error with AD, IntegrationServices DirectumManager + {e.Message}");
+                return default;
+            }
+        }
+
+        private bool ValidateADCredentials(string username, string password)
+        {
+            try
+            {
+                using (var context = new PrincipalContext(ContextType.Domain, AD_DOMAIN, AD_LDAP_PATH, AD_USERNAME, AD_PASSWORD))
+                {
+                    return context.ValidateCredentials(username, password);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Ошибка при валидации учетных данных AD для пользователя: {username}", username);
+                return false;
+            }
         }
     }
 }
